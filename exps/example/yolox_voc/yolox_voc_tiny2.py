@@ -11,7 +11,7 @@ import torch.nn as nn
 class Exp(MyExp):
     def __init__(self):
         super(Exp, self).__init__()
-        self.num_classes = 1
+        self.num_classes = 20
         self.depth = 0.33
         self.width = 0.375
         self.warmup_epochs = 1

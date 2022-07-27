@@ -18,7 +18,7 @@ class Exp(BaseExp):
 
         # ---------------- model config ---------------- #
         # detect classes number of model
-        self.num_classes = 1
+        self.num_classes = 20
         # factor of model depth
         self.depth = 0.33
         # factor of model width
@@ -69,12 +69,12 @@ class Exp(BaseExp):
         # epoch number used for warmup
         self.warmup_epochs = 5
         # max training epoch
-        self.max_epoch = 200
+        self.max_epoch = 100
         # minimum learning rate during warmup
         self.warmup_lr = 0
         self.min_lr_ratio = 0.05
         # learning rate for one image. During training, lr will multiply batchsize.
-        self.basic_lr_per_img = 0.01 / 64.0 * 4
+        self.basic_lr_per_img = 0.01 / 64.0 * 2
         # name of LRScheduler
         self.scheduler = "yoloxwarmcos"
         # last #epoch to close augmention like mosaic
@@ -88,10 +88,10 @@ class Exp(BaseExp):
         self.momentum = 0.9
         # log period in iter, for example,
         # if set to 1, user could see log every iteration.
-        self.print_interval = 20
+        self.print_interval = 2
         # eval period in epoch, for example,
         # if set to 1, model will be evaluate after every epoch.
-        self.eval_interval = 10
+        self.eval_interval = 2
         # save history checkpoint or not.
         # If set to False, yolox will only save latest and best ckpt.
         self.save_history_ckpt = True
