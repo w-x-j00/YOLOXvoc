@@ -15,11 +15,11 @@ class Exp(MyExp):
         self.depth = 0.33
         self.width = 0.375
         self.warmup_epochs = 1
-        self.input_size = (416, 416)
-        self.mosaic_scale = (0.5, 1.5)
-        self.random_size = (10, 20)
-        self.test_size = (416, 416)
-        self.enable_mixup = False
+        # self.input_size = (416, 416)
+        # self.mosaic_scale = (0.5, 1.5)
+        # self.random_size = (10, 20)
+        # self.test_size = (416, 416)
+        # self.enable_mixup = False
 
         # ---------- transform config ------------ #
         self.mosaic_prob = 1.0

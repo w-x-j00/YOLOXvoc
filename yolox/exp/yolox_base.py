@@ -69,12 +69,12 @@ class Exp(BaseExp):
         # epoch number used for warmup
         self.warmup_epochs = 5
         # max training epoch
-        self.max_epoch = 100
+        self.max_epoch = 200
         # minimum learning rate during warmup
         self.warmup_lr = 0
         self.min_lr_ratio = 0.05
         # learning rate for one image. During training, lr will multiply batchsize.
-        self.basic_lr_per_img = 0.01 / 64.0 * 2
+        self.basic_lr_per_img = 0.01 / 64.0 * 4
         # name of LRScheduler
         self.scheduler = "yoloxwarmcos"
         # last #epoch to close augmention like mosaic
@@ -94,7 +94,7 @@ class Exp(BaseExp):
         self.eval_interval = 2
         # save history checkpoint or not.
         # If set to False, yolox will only save latest and best ckpt.
-        self.save_history_ckpt = True
+        self.save_history_ckpt = False       #True
         # name of experiment
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
@@ -299,10 +299,11 @@ class Exp(BaseExp):
         return val_loader
 
     def get_evaluator(self, batch_size, is_distributed, testdev=False, legacy=False):
-        from yolox.evaluators import COCOEvaluator
+        # from yolox.evaluators import COCOEvaluator
+        from yolox.evaluators import VOCEvaluator
 
         val_loader = self.get_eval_loader(batch_size, is_distributed, testdev, legacy)
-        evaluator = COCOEvaluator(
+        evaluator = VOCEvaluator(
             dataloader=val_loader,
             img_size=self.test_size,
             confthre=self.test_conf,
