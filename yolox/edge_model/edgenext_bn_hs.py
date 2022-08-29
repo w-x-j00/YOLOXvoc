@@ -12,8 +12,10 @@ class EdgeNeXtBNHS(nn.Module):
                  global_block=[0, 0, 0, 3], global_block_type=['None', 'None', 'None', 'SDTA_BN_HS'],
                  drop_path_rate=0., layer_scale_init_value=1e-6, head_init_scale=1., expan_ratio=4,
                  kernel_sizes=[7, 7, 7, 7], heads=[8, 8, 8, 8], use_pos_embd_xca=[False, False, False, False],
-                 use_pos_embd_global=False, d2_scales=[2, 3, 4, 5], **kwargs):
+                 use_pos_embd_global=False, d2_scales=[2, 3, 4, 5], out_features=("dark3", "dark4", "dark5"), **kwargs):
         super().__init__()
+        self.out_features = out_features
+
         for g in global_block_type:
             assert g in ['None', 'SDTA_BN_HS']
 
@@ -56,13 +58,13 @@ class EdgeNeXtBNHS(nn.Module):
 
             self.stages.append(nn.Sequential(*stage_blocks))
             cur += depths[i]
-        self.norm = nn.BatchNorm2d(dims[-1])
-        self.head = nn.Linear(dims[-1], num_classes)
+        # self.norm = nn.BatchNorm2d(dims[-1])
+        # self.head = nn.Linear(dims[-1], num_classes)
 
         self.apply(self._init_weights)
-        self.head_dropout = nn.Dropout(kwargs["classifier_dropout"])
-        self.head.weight.data.mul_(head_init_scale)
-        self.head.bias.data.mul_(head_init_scale)
+        # self.head_dropout = nn.Dropout(kwargs["classifier_dropout"])
+        # self.head.weight.data.mul_(head_init_scale)
+        # self.head.bias.data.mul_(head_init_scale)
 
     def _init_weights(self, m):  # TODO: MobileViT is using 'kaiming_normal' for initializing conv layers
         if isinstance(m, (nn.Conv2d, nn.Linear)):
@@ -73,7 +75,20 @@ class EdgeNeXtBNHS(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
-    def forward_features(self, x):
+    # def forward_features(self, x):
+    #     x = self.downsample_layers[0](x)
+    #     x = self.stages[0](x)
+    #     if self.pos_embd:
+    #         B, C, H, W = x.shape
+    #         x = x + self.pos_embd(B, H, W)
+    #     for i in range(1, 4):
+    #         x = self.downsample_layers[i](x)
+    #         x = self.stages[i](x)
+    #     return self.norm(x).mean([-2, -1])
+
+
+    def forward(self, x):
+        outputs = {}
         x = self.downsample_layers[0](x)
         x = self.stages[0](x)
         if self.pos_embd:
@@ -82,9 +97,16 @@ class EdgeNeXtBNHS(nn.Module):
         for i in range(1, 4):
             x = self.downsample_layers[i](x)
             x = self.stages[i](x)
-        return self.norm(x).mean([-2, -1])
+            if i == 1:
+                outputs["dark3"] = x
+            elif i == 2:
+                outputs["dark4"] = x
+            elif i == 3:
+                outputs["dark5"] = x
+        return {k: v for k, v in outputs.items() if k in self.out_features}
 
-    def forward(self, x):
-        x = self.forward_features(x)
-        x = self.head(self.head_dropout(x))
-        return x
+
+    # def forward(self, x):
+    #     x = self.forward_features(x)
+    #     x = self.head(self.head_dropout(x))
+    #     return x
