@@ -74,7 +74,7 @@ class Exp(BaseExp):
         self.warmup_lr = 0
         self.min_lr_ratio = 0.05
         # learning rate for one image. During training, lr will multiply batchsize.
-        self.basic_lr_per_img = 0.01 / 64.0
+        self.basic_lr_per_img = 0.01 / 64.0 * 4
         # name of LRScheduler
         self.scheduler = "yoloxwarmcos"
         # last #epoch to close augmention like mosaic
@@ -246,8 +246,9 @@ class Exp(BaseExp):
             # optimizer = torch.optim.SGD(
             #     pg0, lr=lr, momentum=self.momentum, nesterov=True
             # )
-            optimizer = torch.optim.AdamW(pg0, lr=lr,)
-
+            optimizer = torch.optim.AdamW(
+                pg0, lr=lr,
+            )
             optimizer.add_param_group(
                 {"params": pg1, "weight_decay": self.weight_decay}
             )  # add pg1 with weight_decay
