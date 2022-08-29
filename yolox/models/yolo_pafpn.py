@@ -7,7 +7,7 @@ import torch.nn as nn
 
 from .darknet import CSPDarknet
 from .network_blocks import BaseConv, CSPLayer, DWConv,SPPF
-from yolox.edge_model.model import edgenext_x_small
+from yolox.edge_model.model import edgenext_x_small,edgenext_x_small_bn_hs
 
 class YOLOPAFPN(nn.Module):
     """
@@ -25,7 +25,7 @@ class YOLOPAFPN(nn.Module):
     ):
         super().__init__()
         # self.backbone = CSPDarknet(depth, width, depthwise=depthwise, act=act)
-        self.backbone = edgenext_x_small(pretrained=False)
+        self.backbone = edgenext_x_small_bn_hs(pretrained=False)
         self.in_features = in_features
         self.in_channels = in_channels
         Conv = DWConv if depthwise else BaseConv
