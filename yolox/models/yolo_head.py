@@ -13,7 +13,7 @@ from yolox.utils import bboxes_iou, meshgrid
 
 from .losses import IOUloss,alpha_IOUloss
 from .network_blocks import BaseConv, DWConv
-
+from .varifocalloss import FocalLoss
 
 class YOLOXHead(nn.Module):
     def __init__(
@@ -31,6 +31,9 @@ class YOLOXHead(nn.Module):
             depthwise (bool): whether apply depthwise conv in conv branch. Defalut value: False.
         """
         super().__init__()
+
+        # 添加实例化Focal loss
+        self.focal_loss = FocalLoss(nn.BCEWithLogitsLoss(), gamma=1.5)
 
         self.n_anchors = 1
         self.num_classes = num_classes
@@ -126,7 +129,7 @@ class YOLOXHead(nn.Module):
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
         self.iou_loss = IOUloss(reduction="none")
-        # self.iou_loss = alpha_IOUloss(reduction="none")
+        # self.iou_loss = alpha_IOUloss(reduction="none") # 自己添加alpha——IOUloss
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
 
@@ -392,8 +395,12 @@ class YOLOXHead(nn.Module):
         loss_iou = (
             self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
         ).sum() / num_fg
+        # loss_obj = (
+        #     self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
+        # ).sum() / num_fg
+        # 替换置信度损失为focal_loss
         loss_obj = (
-            self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
+            self.focal_loss(obj_preds.view(-1, 1), obj_targets)
         ).sum() / num_fg
         loss_cls = (
             self.bcewithlog_loss(
