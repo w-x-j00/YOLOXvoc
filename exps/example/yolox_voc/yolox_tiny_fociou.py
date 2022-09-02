@@ -1,56 +1,52 @@
-#!/usr/bin/env python3
-# -*- coding:utf-8 -*-
-# Copyright (c) Megvii, Inc. and its affiliates.
-
-
+# encoding: utf-8
 import os
 
 import torch
 import torch.distributed as dist
-import torch.nn as nn
+
 from yolox.data import get_yolox_datadir
-
 from yolox.exp import Exp as MyExp
-
+import torch.nn as nn
 
 class Exp(MyExp):
     def __init__(self):
         super(Exp, self).__init__()
+        self.num_classes = 1
         self.depth = 0.33
-        self.width = 0.25
+        self.width = 0.375
+        # self.warmup_epochs = 1
         self.input_size = (416, 416)
-        self.random_size = (10, 20)
         self.mosaic_scale = (0.5, 1.5)
+        self.random_size = (10, 20)
         self.test_size = (416, 416)
-        self.mosaic_prob = 0.5
         self.enable_mixup = False
+
+        # ---------- transform config ------------ #
+        self.mosaic_prob = 1.0
+        self.mixup_prob = 1.0
+        self.hsv_prob = 1.0
+        self.flip_prob = 0.5
+
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
-    def get_model(self, sublinear=False):
-
-        def init_yolo(M):
-            for m in M.modules():
-                if isinstance(m, nn.BatchNorm2d):
-                    m.eps = 1e-3
-                    m.momentum = 0.03
-        if "model" not in self.__dict__:
-            from yolox.models import YOLOX, YOLOPAFPN, YOLOXHead
-            in_channels = [256, 512, 1024]
-            # NANO model use depthwise = True, which is main difference.
-            backbone = YOLOPAFPN(
-                self.depth, self.width, in_channels=in_channels,
-                act=self.act, depthwise=True,
-            )
-            head = YOLOXHead(
-                self.num_classes, self.width, in_channels=in_channels,
-                act=self.act, depthwise=True
-            )
-            self.model = YOLOX(backbone, head)
-
-        self.model.apply(init_yolo)
-        self.model.head.initialize_biases(1e-2)
-        return self.model
-
+    # def get_model(self, sublinear=False):
+    #
+    #     def init_yolo(M):
+    #         for m in M.modules():
+    #             if isinstance(m, nn.BatchNorm2d):
+    #                 m.eps = 1e-3
+    #                 m.momentum = 0.03
+    #     if "model" not in self.__dict__:
+    #         from yolox.models import YOLOX, YOLOPAFPN, YOLOXHead
+    #         in_channels = [256, 512, 1024]
+    #         # NANO model use depthwise = True, which is main difference.
+    #         backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels, depthwise=False)
+    #         head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, depthwise=False)
+    #         self.model = YOLOX(backbone, head)
+    #
+    #     self.model.apply(init_yolo)
+    #     self.model.head.initialize_biases(1e-2)
+    #     return self.model
 
     def get_data_loader(self, batch_size, is_distributed, no_aug=False, cache_img=False):
         from yolox.data import (
